@@ -9,17 +9,22 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/agri_m
 const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME || 'agri_management_nosql';
 
 // In-Memory Document Store for Resilient Execution
-export const memoryMongo: {
-  agricultural_advisories: any[];
-  crop_observations: any[];
-  farming_notes: any[];
-  weather_records: any[];
-} = {
+const initialMemoryMongo = {
   agricultural_advisories: sampleAdvisories.map((a: any, idx: number) => ({ _id: `adv_doc_${idx + 1}`, ...a })),
   crop_observations: sampleObservations.map((o: any, idx: number) => ({ _id: `obs_doc_${idx + 1}`, ...o })),
   farming_notes: sampleFarmingNotes.map((n: any, idx: number) => ({ _id: `note_doc_${idx + 1}`, ...n })),
   weather_records: sampleWeatherRecords.map((w: any, idx: number) => ({ _id: `wth_doc_${idx + 1}`, ...w }))
 };
+
+const globalForMongo = globalThis as unknown as {
+  _agripulse_memoryMongo: typeof initialMemoryMongo;
+};
+
+if (!globalForMongo._agripulse_memoryMongo) {
+  globalForMongo._agripulse_memoryMongo = initialMemoryMongo;
+}
+
+export const memoryMongo = globalForMongo._agripulse_memoryMongo;
 
 // Check live MongoDB connection status
 export async function checkMongoStatus(): Promise<{ connected: boolean; latencyMs: number; mode: 'REAL_MONGODB' | 'MEMORY_SIMULATION'; databaseName?: string }> {

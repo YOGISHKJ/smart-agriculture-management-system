@@ -33,8 +33,8 @@ export interface IrrigationRecord { irrigation_id: number; cycle_id: number; fie
 export interface ExpenseRecord { expense_id: number; farm_id: number; cycle_id: number | null; expense_date: string; category: string; amount: number; payment_mode: string; receipt_number: string; description: string; created_at: string; }
 export interface HarvestRecord { harvest_id: number; cycle_id: number; harvest_date: string; quantity_kg: number; unit: string; quality_grade: string; selling_price_per_unit: number; total_revenue: number; buyer_name: string; notes: string; created_at: string; }
 
-// Global memory state
-export const memoryDb = {
+// Initial Database State
+const initialMemoryDb = {
   roles: [
     { role_id: 1, role_name: 'ADMIN' as const, description: 'System Administrator' },
     { role_id: 2, role_name: 'FARMER' as const, description: 'Registered Farm Owner' },
@@ -70,11 +70,11 @@ export const memoryDb = {
     { crop_id: 8, crop_name: 'Potato (Kufri Jyoti)', scientific_name: 'Solanum tuberosum', category: 'VEGETABLE', standard_maturity_days: 85, water_requirement: 'MEDIUM', optimal_soil: 'Loose, friable sandy loam' },
   ] as CropRecord[],
   crop_cycles: [
-    { cycle_id: 1, field_id: 1, crop_id: 1, sowing_date: '2025-01-10', expected_harvest_date: '2025-04-15', actual_harvest_date: '2025-04-12', status: 'HARVESTED', target_yield_kg: 15000.00, notes: 'High yield test cycle with integrated drip fertigation protocol', created_at: '2025-01-10T00:00:00Z' },
-    { cycle_id: 2, field_id: 2, crop_id: 5, sowing_date: '2025-02-01', expected_harvest_date: '2025-06-30', actual_harvest_date: null, status: 'ACTIVE', target_yield_kg: 4500.00, notes: 'Green chilli nursery transplanting with micro-sprinkler misting', created_at: '2025-02-01T00:00:00Z' },
-    { cycle_id: 3, field_id: 3, crop_id: 2, sowing_date: '2024-11-15', expected_harvest_date: '2025-03-25', actual_harvest_date: '2025-03-20', status: 'COMPLETED', target_yield_kg: 18000.00, notes: 'Basmati aromatic paddy with System of Rice Intensification (SRI)', created_at: '2024-11-15T00:00:00Z' },
-    { cycle_id: 4, field_id: 4, crop_id: 6, sowing_date: '2025-01-20', expected_harvest_date: '2025-05-15', actual_harvest_date: null, status: 'ACTIVE', target_yield_kg: 3200.00, notes: 'Chickpea intercropped with border coriander rows for IPM', created_at: '2025-01-20T00:00:00Z' },
-    { cycle_id: 5, field_id: 5, crop_id: 4, sowing_date: '2024-10-01', expected_harvest_date: '2025-10-01', actual_harvest_date: null, status: 'ACTIVE', target_yield_kg: 65000.00, notes: 'Sugarcane ratoon trial with trash mulching moisture conservation', created_at: '2024-10-01T00:00:00Z' },
+    { cycle_id: 1, field_id: 1, crop_id: 1, sowing_date: '2025-01-10', expected_harvest_date: '2025-04-15', actual_harvest_date: '2025-04-12', status: 'HARVESTED' as const, target_yield_kg: 15000.00, notes: 'High yield test cycle with integrated drip fertigation protocol', created_at: '2025-01-10T00:00:00Z' },
+    { cycle_id: 2, field_id: 2, crop_id: 5, sowing_date: '2025-02-01', expected_harvest_date: '2025-06-30', actual_harvest_date: null, status: 'ACTIVE' as const, target_yield_kg: 4500.00, notes: 'Green chilli nursery transplanting with micro-sprinkler misting', created_at: '2025-02-01T00:00:00Z' },
+    { cycle_id: 3, field_id: 3, crop_id: 2, sowing_date: '2024-11-15', expected_harvest_date: '2025-03-25', actual_harvest_date: '2025-03-20', status: 'COMPLETED' as const, target_yield_kg: 18000.00, notes: 'Basmati aromatic paddy with System of Rice Intensification (SRI)', created_at: '2024-11-15T00:00:00Z' },
+    { cycle_id: 4, field_id: 4, crop_id: 6, sowing_date: '2025-01-20', expected_harvest_date: '2025-05-15', actual_harvest_date: null, status: 'ACTIVE' as const, target_yield_kg: 3200.00, notes: 'Chickpea intercropped with border coriander rows for IPM', created_at: '2025-01-20T00:00:00Z' },
+    { cycle_id: 5, field_id: 5, crop_id: 4, sowing_date: '2024-10-01', expected_harvest_date: '2025-10-01', actual_harvest_date: null, status: 'ACTIVE' as const, target_yield_kg: 65000.00, notes: 'Sugarcane ratoon trial with trash mulching moisture conservation', created_at: '2024-10-01T00:00:00Z' },
   ] as CropCycleRecord[],
   crop_status_history: [
     { history_id: 1, cycle_id: 1, previous_status: 'PLANNED', new_status: 'ACTIVE', changed_at: '2025-01-10T00:00:00Z', remarks: 'Crop transplanted successfully' },
@@ -128,6 +128,17 @@ export const memoryDb = {
     { harvest_id: 1, cycle_id: 1, harvest_date: '2025-04-12', quantity_kg: 14800.00, unit: 'KG', quality_grade: 'GRADE_A', selling_price_per_unit: 28.00, total_revenue: 414400.00, buyer_name: 'Bangalore Horticulture Wholesale Traders', notes: 'Grade-A firm red tomatoes sold at APMC market Yard 4', created_at: '2025-04-12T00:00:00Z' },
   ] as HarvestRecord[],
 };
+
+// Global memory state singleton attached to globalThis
+const globalForPostgres = globalThis as unknown as {
+  _agripulse_memoryDb: typeof initialMemoryDb;
+};
+
+if (!globalForPostgres._agripulse_memoryDb) {
+  globalForPostgres._agripulse_memoryDb = initialMemoryDb;
+}
+
+export const memoryDb = globalForPostgres._agripulse_memoryDb;
 
 // Check PostgreSQL live connectivity status
 export async function checkPostgresStatus(): Promise<{ connected: boolean; latencyMs: number; mode: 'REAL_POSTGRESQL' | 'MEMORY_SIMULATION'; databaseName?: string }> {

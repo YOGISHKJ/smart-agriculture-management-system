@@ -57,10 +57,16 @@ export default function FarmerDashboard() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           <Link
-            href="/farmer/activities"
+            href="/farmer/fields"
             className="px-3.5 py-2 rounded-xl bg-white text-emerald-900 text-xs font-bold shadow-sm hover:bg-emerald-50 transition flex items-center"
           >
-            <Plus className="w-3.5 h-3.5 mr-1 text-emerald-700" /> Log Activity
+            <Layers className="w-3.5 h-3.5 mr-1 text-emerald-700" /> Enter Field &amp; Crop Details
+          </Link>
+          <Link
+            href="/farmer/activities"
+            className="px-3.5 py-2 rounded-xl bg-emerald-900/80 hover:bg-emerald-900 text-white text-xs font-bold border border-emerald-600/60 transition flex items-center"
+          >
+            <Plus className="w-3.5 h-3.5 mr-1" /> Log Activity
           </Link>
           <Link
             href="/farmer/observations"
